@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using smartpond.DATA;
+using BiharITI.DATA;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace smartpond.Controllers
+namespace BiharITI.Controllers
 {
     public class GPSController : ApiController
     {
@@ -17,7 +16,7 @@ namespace smartpond.Controllers
         {
             try
             {
-                using (smartpondEntities DB = new smartpondEntities())
+                using (kernels1_itiEntities DB = new kernels1_itiEntities())
                 {
                     DATA.GP gps = new GP();
                     gps.lat = Latitude;
@@ -47,7 +46,7 @@ namespace smartpond.Controllers
         {
             try
             { 
-                using (smartpondEntities DB = new smartpondEntities())
+                using (kernels1_itiEntities DB = new kernels1_itiEntities())
                 {
                     DATA.GP gps = new GP();
                     gps.lat = Latitude;
@@ -71,15 +70,51 @@ namespace smartpond.Controllers
             }
         }
 
+
+
         [HttpGet]
+        public IHttpActionResult SaveGps(string Latitude, string Longitude, int deviceid, string devicename)
+        { 
+            try
+            {
+                using (kernels1_itiEntities DB = new kernels1_itiEntities())
+                {
+                    DATA.VehicleTracking gps = new VehicleTracking();
+                    gps.Latitude = Latitude;
+                    gps.Longitude = Longitude;
+                    gps.deviceid = deviceid;
+                    gps.devicename = devicename;
+                    TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                    DateTime timeUtc = DateTime.UtcNow;
+                    DateTime result = TimeZoneInfo.ConvertTimeFromUtc(timeUtc, timeZoneInfo);
+                    gps.updatedDate = result;
+                    DB.VehicleTrackings.Add(gps);
+                    DB.SaveChanges();
+                }
+                var response = new
+                {
+                    Success = true,
+                    Message = "GPS Coorinates saved Successfully",
+
+                };
+                return Ok(response);
+            }
+            catch (Exception)
+            {
+                return Content(HttpStatusCode.BadRequest, "Error Found");
+            }
+        }
+
+        [HttpGet]
+        [Route("api/VehicleTracking")]
         public HttpResponseMessage GetGPS()
         {
             try
             {
                var gpsJson = "";
-                using (smartpondEntities DB = new smartpondEntities())
+                using (kernels1_itiEntities DB = new kernels1_itiEntities())
                 {
-                    var gps = DB.GPS.ToList();
+                    var gps = DB.VehicleTrackings.ToList();
                     gpsJson = JsonConvert.SerializeObject(gps);
                 }
                 var response = this.Request.CreateResponse(HttpStatusCode.OK,gpsJson);
@@ -99,7 +134,7 @@ namespace smartpond.Controllers
             try
             {
                 var gpsJson = "";
-                using (smartpondEntities DB = new smartpondEntities())
+                using (kernels1_itiEntities DB = new kernels1_itiEntities())
                 {
                     var gps = DB.GPS.FirstOrDefault();
                     gpsJson = JsonConvert.SerializeObject(gps);
